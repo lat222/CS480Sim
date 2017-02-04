@@ -18,6 +18,6 @@ struct config {
 	char* log_fp;
 };
 
-int mdsize(char* file_name);
-char** mdstore(char* file_name, int array_length);
+//int mdsize(char* file_name);
+char** mdstore(char* file_name);
 void empty(char *var);

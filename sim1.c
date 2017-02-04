@@ -48,7 +48,7 @@ char** mdstore(char* file_name)
 	//inFilePtr = fopen(file_name, "r");
 	fseek(inFilePtr,0,SEEK_SET);
 	int g = (ops-1)*programs;
-	char ** md = (char**) malloc(g*sizeof(char*));
+	char ** md = (char**) malloc(40*sizeof(char*));
 	printf("\n\nmd size: %d\n\n",sizeof(md));
 	buff_index = 0;
 	int index_x = 0;
