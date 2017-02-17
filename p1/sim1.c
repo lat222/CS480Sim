@@ -1,6 +1,6 @@
 #include "sim1.h"
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
 	MD  inmd = mdstore("testfile.mdf");	// parse the metadata file
 	read_md(inmd);// print the struct containing the metadata file
 	CFG inconfig = configStore("config1.cnf");	// parse the config file
@@ -15,7 +15,7 @@ MD mdstore(char* file_name)
 	MD md;			// initialize the struct that will store the file contents
 	FILE *inFilePtr;	// make pointer for file name
 	char new_char;	// this char is for reading in chars from the file
-	char buff[255];	//this is a buffer that will hold all of the ops in the file
+	char buff[30];	//this is a buffer that will hold all of the ops in the file
 	char program_string[255]; // this buffer will hold each of the programs in the file; so A(start)0 to A(end)0
 	int program_ind, buff_index, programs = 0;	// all of these represent some kind of index
 	char* end = " S(end)0.";	// the last op of the metadata file
@@ -27,7 +27,7 @@ MD mdstore(char* file_name)
     }
     // read all the way to the first semi-colon
     // helps to keep the buff[] from being filed with useless chars
-	while(fgetc(inFilePtr) != ';')
+	while((new_char = fgetc(inFilePtr)) != ';')
 	{
 
 	}
@@ -37,11 +37,12 @@ MD mdstore(char* file_name)
 	while((new_char = fgetc(inFilePtr)) != EOF && strcmp(buff, end) != 0)
 	{
 		buff[buff_index++] = new_char; // add the char to the buffer
-		program_string[program_ind++] = new_char; // add it also to the program_string
+		/*program_string[program_ind++] = new_char; // add it also to the program_string
 		char* m = " A(end)0;"; // the last op of a program
 		// if the buff or op is the last one of a program, store it in the md struct
 		if (strcmp(buff, m) == 0)
 		{
+			//printf("%s \n\n",program_string);
 			// the struct only allows for 11 programs, no programs after that will be stored
 			switch(programs){
 				// stores programs up to 200 chars long, all other chars are cut off
@@ -88,14 +89,23 @@ MD mdstore(char* file_name)
 			program_ind = 0;
 			empty(buff);
 			buff_index = 0;
-		}
+		}*/
 		// empties ops from buff in order to check only for ending ops
-		else if (new_char == ';')
+		//else if (new_char == ';')
+		if(new_char == ';')
 		{
+			printf("\n");
 			empty(buff);
 			buff_index = 0;
 		}
-		//printf("%s\n", new_char);
+		else if(new_char == '\n'){
+
+		}
+		else{
+			printf("%c", new_char);
+		}
+		empty(buff);
+		//printf("%c\n", new_char);
 	}
 	// close the file and return the struct
 	fclose(inFilePtr);
@@ -109,7 +119,7 @@ void read_md(MD metad)
 	// stored metadata file's information
 	int index = 1;
 	printf("The metadata file held the following information: \n");
-	while (index < 13){
+	/*while (index < 13){
 		switch(index){
 			case 1:
 				if(metad.ps1 != NULL){printf("%s, ",metad.ps1);}
@@ -138,7 +148,7 @@ void read_md(MD metad)
 		}
 		index++;
 
-	}
+	}*/
 }
 
 /* Similar to the above function, this one parses the config file.
@@ -146,7 +156,7 @@ void read_md(MD metad)
 CFG configStore(char* file_name)
 {
 	FILE *inFilePtr;	// intialize the variable for the file
-	char line[255];		// initialize a buffer for the data that must be stored
+	//char line[255];		// initialize a buffer for the data that must be stored
 	CFG config_data;	// initialize the struct that will be returned
 	char new_char;		// this char will store all read in chars
 	int index, line_num = 0;	// indices for the buffer and to keep track of what line is being read
@@ -158,7 +168,7 @@ CFG configStore(char* file_name)
 	}
 	// loop through all the characters in the file
 	// if the character being read in is the end of file char, stop looping
-	while((new_char = fgetc(inFilePtr)) != EOF){
+	/*while((new_char = fgetc(inFilePtr)) != EOF){
 		// add the character to the buffer
 		line[index++] = new_char;
 		// the part of the string before the colon is unecessary; so get rid of it
@@ -207,7 +217,8 @@ CFG configStore(char* file_name)
 			empty(line);
 			index = 0;
 		}
-	}
+	}*/
+	fclose(inFilePtr);
 	return config_data;	// return the struct
 }
 
@@ -216,9 +227,9 @@ void read_config(CFG config_data)
 {
 	// uses a while loop and switch statement to read through all of the
 	// stored config file's information
-	int index = 1;
+	//int index = 1;
 	printf("The config file held the following information: \n");
-	while (index < 9){
+	/*while (index < 9){
 		switch(index){
 			case 1:
 				//strcpy (config_data.file_path, "hello");
@@ -240,11 +251,11 @@ void read_config(CFG config_data)
 		}
 		index++;
 
-	}
+	}*/
 }
 
 // empties out the buffer so that it can new chars can be held
-void empty(char* var) {
+void empty(char var[]) {
     int i = 0;
     while(var[i] != '\0') {
         var[i] = '\0';
