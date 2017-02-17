@@ -2,7 +2,7 @@
 
 int main(int argc, char* argv[]) 
 {
-	char **metadata = mdstore();	// parse the metadata file
+	char **metadata = mdstore("testfile.mdf");	// parse the metadata file
 	int i = 0;
 	while(metadata[i] != '\0')
 	{
@@ -11,9 +11,9 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-char** mdstore(){
+char** mdstore(char* fileName){
 	int processesStored = 0;
-	char *fileString = get_string_of_file("testfile.mdf");
+	char *fileString = get_string_of_file(fileName);
 	//printf("%s\n\n", fileString);
 	int processes = count_char_in_string(fileString,';');
 	char **array = (char**) malloc((processes+1)*sizeof(char*));
@@ -22,7 +22,15 @@ char** mdstore(){
 	token = strtok(NULL,";");
 	while (processesStored<processes-1)
 	{
-		array[processesStored++] = token;
+		if(count_char_in_string(token, '\n')>0)
+		{
+			char* noNewLine = token+2;
+			array[processesStored++] = noNewLine;
+		}
+		else
+		{
+			array[processesStored++] = token;
+		}
 		//printf("%s \n", token);
 		token = strtok(NULL,";");
 	}
