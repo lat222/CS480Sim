@@ -18,7 +18,8 @@ char** mdstore(char* fileName){
 	int processes = count_char_in_string(fileString,';');
 	char **array = (char**) malloc((processes+1)*sizeof(char*));
 	char* token;
-	token = strtok(fileString, ":");
+	token = strtok(fileString, "\n");
+	token = strtok(NULL,"\n");
 	token = strtok(NULL,";");
 	while (processesStored<processes-1)
 	{
@@ -27,6 +28,11 @@ char** mdstore(char* fileName){
 			char* noNewLine = token+2;
 			array[processesStored++] = noNewLine;
 		}
+		else if(token[0] == ' ')
+		{
+			char* noLeadingBlankSpace = token + 1;
+			array[processesStored++] = noLeadingBlankSpace;
+		}
 		else
 		{
 			array[processesStored++] = token;
@@ -34,11 +40,11 @@ char** mdstore(char* fileName){
 		//printf("%s \n", token);
 		token = strtok(NULL,";");
 	}
-	array[processesStored++] = token;
+	array[processesStored++] = token + 1;
 	//printf("%s \n", token);
 	token = strtok(NULL,".");
 	//printf("%s \n", token);
-	array[processesStored++] = token;
+	array[processesStored++] = token + 1;
 	array[processesStored] = '\0';
 	return array;
 }
