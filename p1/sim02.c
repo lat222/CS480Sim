@@ -1,4 +1,4 @@
-#include "s1test.h"
+#include "sim02.h"
 
 int main(int argc, char* argv[]) 
 {
@@ -18,10 +18,11 @@ int main(int argc, char* argv[])
 			{
 				printf("%s\n", metadata[loopThroughArray++]);
 			}
+			sim02(configData,metadata);
 		}
 		else
 		{
-			printf("ERROR: %s metadata is not recognized\n", metadata[1]);
+			printf("%s \n", metadata[1]);
 		}
 	}
 	else
@@ -199,6 +200,17 @@ char* cut_string_after_char(char* inString, char charToCutOut)
 	return returnString;
 }
 
+// taken from http://stackoverflow.com/questions/8465006/how-to-concatenate-2-strings-in-c
+char* concat(char *s1, char *s2)
+{
+    const size_t len1 = strlen(s1);
+    const size_t len2 = strlen(s2);
+    char *result = malloc(len1+len2+1);
+    memcpy(result, s1, len1);
+    memcpy(result+len1, s2, len2+1);//+1 to copy the null-terminator
+    return result;
+}
+
 int check_string_is_int_in_range(char* data, int lowerBound, int upperBound)
 {
 	int intData = atoi(data);
@@ -264,42 +276,76 @@ char** put_metadata_in_array(char* inString, int totalProcesses)
 	int noUnacceptableData  = 1;
 	int programStartsAndEnds = 0;
 	int processStartsAndEnds = 0;
-	while (processesStored<totalProcesses && noUnacceptableData != 0)
+	while (processesStored<totalProcesses && noUnacceptableData != 0 && programStartsAndEnds < 2 && programStartsAndEnds > -1
+	  && processStartsAndEnds < 2 && processStartsAndEnds >-1)
 	{
 		token = strtok(NULL,";");
 		if(count_char_in_string(token, '\n')>0)
 		{
 			char* noNewLine = token+2;
 			noUnacceptableData += check_metadata_is_acceptable(noNewLine);
+			programStartsAndEnds += check_program_start_and_end(noNewLine);
+			processStartsAndEnds += check_process_start_and_end(noNewLine);
 			arrayToReturn[processesStored++] = noNewLine;
 		}
 		else if(token[0] == ' ')
 		{
 			char* noLeadingBlankSpace = token + 1;
 			noUnacceptableData += check_metadata_is_acceptable(noLeadingBlankSpace);
+			programStartsAndEnds += check_program_start_and_end(noLeadingBlankSpace);
+			processStartsAndEnds += check_process_start_and_end(noLeadingBlankSpace);
 			arrayToReturn[processesStored++] = noLeadingBlankSpace;
 		}
 		else
 		{
 			noUnacceptableData += check_metadata_is_acceptable(token);
+			programStartsAndEnds += check_program_start_and_end(token);
+			processStartsAndEnds += check_process_start_and_end(token);
 			arrayToReturn[processesStored++] = token;
 		}
 	}
-	if(noUnacceptableData != 0)
+	if (noUnacceptableData == 0)
 	{
-		arrayToReturn[processesStored++] = token + 1;
-		token = strtok(NULL,".");
-		arrayToReturn[processesStored++] = token + 1;
-		arrayToReturn[processesStored] = '\0';
-		return arrayToReturn;
+		arrayToReturn[0] = '\0';
+		arrayToReturn[1] = concat("Could not recognize metadata command ", token);
+	}
+	else if(processStartsAndEnds != 0){
+		arrayToReturn[0] = '\0';
+		if(processStartsAndEnds > 0)
+		{
+			arrayToReturn[1] = "ERROR: Missing A(end)0 for a process";
+		}
+		else
+		{
+			arrayToReturn[1] = "ERROR: Missing A(start)0 for a process";
+		}
+	}
+	else if(programStartsAndEnds != 1){
+		arrayToReturn[0] = '\0';
+		if(programStartsAndEnds  > 1) {
+			arrayToReturn[1] = "ERROR: Too many S(start)0 commands";
+		}
+		else {
+			arrayToReturn[1] = "ERROR: Too many S(end)0 commands";
+		}
 	}
 	else
 	{
-		arrayToReturn[0] = '\0';
-		arrayToReturn[1] = token;
-		return arrayToReturn;
+		token = strtok(NULL,".");
+		char* noLeadingBlankSpace = token + 1;
+		programStartsAndEnds += check_program_start_and_end(noLeadingBlankSpace);
+		if(programStartsAndEnds == 0)
+		{
+			arrayToReturn[processesStored++] = noLeadingBlankSpace;
+			arrayToReturn[processesStored] = '\0';
+		}
+		else
+		{
+			arrayToReturn[0] = '\0';
+			arrayToReturn[1] = "ERROR: Missing the closing program command";
+		}
 	}
-
+	return arrayToReturn;
 }
 
 int check_metadata_is_acceptable(char* data){
@@ -362,4 +408,82 @@ int check_program_start_and_end(char* data)
 	{
 		return 0;
 	}
+}
+
+
+void sim02(char** storedConfigData, char** storedMetadata)
+{
+	printf("in sim02");
+}
+
+char* get_version(char** storedConfigData)
+{
+	return storedConfigData[0];
+}
+
+char* get_file_path(char** storedConfigData)
+{
+	return storedConfigData[1];
+}
+
+char* get_cpu_scheduling_code(char** storedConfigData)
+{
+	return storedConfigData[2];
+}
+
+char* get_quantum_time(char** storedConfigData)
+{
+	return storedConfigData[3];
+}
+
+char* get_memory_available(char** storedConfigData)
+{
+	return storedConfigData[4];
+}
+
+char* get_processor_cycle_time(char** storedConfigData)
+{
+	return storedConfigData[5];
+}
+
+char* get_io_cycle_time(char** storedConfigData)
+{
+	return storedConfigData[6];
+}
+
+char* get_log_to(char** storedConfigData)
+{
+	return storedConfigData[7];
+}
+
+char* get_log_file_path(char** storedConfigData)
+{
+	return storedConfigData[8];
+}
+
+// PCB object methods
+void change_to_new_state(ProcessControlBlock *pcb, char** inProcess)
+{
+	pcb->state = 0;
+	pcb->process = inProcess;
+}
+void change_to_ready_state(ProcessControlBlock *pcb)
+{
+	pcb->state = 1;
+}
+void change_to_run_state(ProcessControlBlock *pcb)
+{
+	pcb->state = 2;
+}
+void change_to_exit_state(ProcessControlBlock *pcb)
+{
+	pcb->state = 3;
+}
+int get_state(ProcessControlBlock *pcb)
+{
+	return (int) pcb->state;
+}
+char** get_process(ProcessControlBlock *pcb)
+{
+	return (char**) pcb->process;
 }
