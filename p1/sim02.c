@@ -209,6 +209,24 @@ char* concat(char *s1, char *s2)
     return result;
 }
 
+char* get_string_after_char(char* inString, char charToCutOut)
+{
+	char* returnString  = (char*) malloc((strlen(inString)+1)*sizeof(char)); 
+	int inStringPointer = 0;
+	int pointer = 0;
+	while(inString[inStringPointer] != charToCutOut)
+	{
+		inStringPointer++;
+	}
+	inStringPointer++;
+	while(inString[inStringPointer] != '\0')
+	{
+		returnString[pointer++] = inString[inStringPointer++];
+	}
+	returnString[pointer] = '\0';
+	return returnString;
+}
+
 int check_string_is_int_in_range(char* data, int lowerBound, int upperBound)
 {
 	int intData = atoi(data);
@@ -412,8 +430,10 @@ int check_program_start_and_end(char* data)
 void sim02(char** storedConfigData, char** inMetadata)
 {
 	clock_t difference;
-	char holdString[1000];
-	char *str = holdString;
+	char holdStartString[1000];
+	char *str = holdStartString;
+	char holdRunString[10000];
+	char *str1  = holdRunString;
 	char** simLog = (char**) malloc(logStringLength*sizeof(char*));
 	int logIndex = 0;
 	simLog[logIndex++]="Operating System Simulator\n==========================\n\n\n";
@@ -426,48 +446,103 @@ void sim02(char** storedConfigData, char** inMetadata)
 	
 	// Store all processes and their PCBs here
 	// Need access to both Processes list and PCB list
-
-	ProcessControlBlock* test;
-	change_to_new_state(test);
-	printf("PCB State: %d\n",get_state(test));
+	// the process and its pcb are held on the same index within their respective lists
 
 	int* processesIndices = divide_processes_by_index(inMetadata);
 	int loopThroughProcesses = 0;
 	int numberOfProcesses = get_num_processes(inMetadata);
-	ProcessControlBlock** pcbStore = (ProcessControlBlock**) malloc((numberOfProcesses+1)*sizeof(ProcessControlBlock*));
+	int* pcbStore = (int*) malloc((numberOfProcesses+1)*sizeof(int));
 	char*** processesStore = (char***) malloc((numberOfProcesses+1)*sizeof(char**));
 	while(loopThroughProcesses < numberOfProcesses)
 	{
-		ProcessControlBlock* pcb;
+		//printf("\n\n((P%d))",loopThroughProcesses);
 		if(loopThroughProcesses==0)
 		{
 			processesStore[loopThroughProcesses] = get_process_from_metadata(inMetadata,1,processesIndices[0]);
-			//change_to_new_state(pcb);
-			//pcbStore[loopThroughProcesses++] = pcb;
+			pcbStore[loopThroughProcesses++] = 0;
 		}
 		else
 		{
 			processesStore[loopThroughProcesses] = get_process_from_metadata(inMetadata,
 				processesIndices[loopThroughProcesses-1]+1,processesIndices[loopThroughProcesses]);
-			//change_to_new_state(pcb);
-			//pcbStore[loopThroughProcesses++] = pcb;
+			pcbStore[loopThroughProcesses++] = 0;
 		}
-		loopThroughProcesses++;
 	}
 
 	difference = clock()-start;
 	str += sprintf(str, "Time: %3d.%03d, OS: All processes initialized in New state\n", difference/CLOCKS_PER_SEC,((difference*1000)/CLOCKS_PER_SEC%1000));
 	
-	//set_pcbs_ready(pcbStore,numberOfProcesses); //sets all PCBs to ready;
+	set_pcbs_ready(pcbStore,numberOfProcesses); //sets all PCBs to ready;
 	
 	difference = clock()-start;
 	str += sprintf(str, "Time: %3d.%03d, OS: All processes now set in Ready state\n", difference/CLOCKS_PER_SEC,(difference*1000)/CLOCKS_PER_SEC%1000);
-	//run_processes(pcbStore, simLog, logIndex); // runs all processes and sets PCBs to run
+	simLog[logIndex++] = holdStartString;
+
+	// run all processes and sets PCBs to exit
+	loopThroughProcesses = 0;
+	while(loopThroughProcesses < numberOfProcesses)
+	{
+		int PCBstate = pcbStore[loopThroughProcesses];
+		// Only run processes in ready state, which is int 1
+		if (PCBstate == 1)
+		 {
+		 	PCBstate = 2; //Running state is int 2
+		 	//printf(" ((P%d))\n",loopThroughProcesses);
+			char** process = processesStore[loopThroughProcesses++];
+			int loopThroughCommands = 0;
+			char* command = process[loopThroughCommands];
+			while(command != '\0')
+			{
+				if(strcmp(command,"A(start)0")==0)
+				{
+					difference = clock()-start;
+					str1 += sprintf(str1,"Time: %3d.%03d, OS: Process %d set in Running State\n",difference/CLOCKS_PER_SEC,(difference*1000)/CLOCKS_PER_SEC%1000,
+						loopThroughProcesses-1);
+					command = process[loopThroughCommands++];
+				}
+				else if(strcmp(command,"A(end)0")==0)
+				{
+					difference = clock()-start;
+					str1 += sprintf(str1,"Time: %3d.%03d, OS: Process %d set in Exit State\n",difference/CLOCKS_PER_SEC,(difference*1000)/CLOCKS_PER_SEC%1000,
+						loopThroughProcesses-1);
+					command = process[loopThroughCommands++];
+				}
+				else if(command[0] == 'O' || command[0] == 'I' || command[0] == 'P')
+				{
+					char* stringToPrint = cut_string_after_char(command, ')');
+					difference = clock()-start;
+					str1 += sprintf(str1,"Time: %3d.%03d, Process %d, %s start\n",difference/CLOCKS_PER_SEC,(difference*1000)/CLOCKS_PER_SEC%1000,
+						loopThroughProcesses-1,stringToPrint);
+					//printf("%d * %d = ", atoi(get_string_after_char(command, ')')), get_config_cycle(command[0],storedConfigData));
+					run_command(command, atoi(get_string_after_char(command, ')'))*
+						get_config_cycle(command[0],storedConfigData));
+					difference = clock()-start;
+					str1 += sprintf(str1,"Time: %3d.%03d, Process %d, %s end\n",difference/CLOCKS_PER_SEC,(difference*1000)/CLOCKS_PER_SEC%1000,
+						loopThroughProcesses-1,stringToPrint);
+					command = process[loopThroughCommands++];
+				}
+				else
+				{
+					char* stringToPrint = cut_string_after_char(command, ')');
+					run_command(command, atoi(get_string_after_char(command, ')'))*
+						get_config_cycle(command[0],storedConfigData));
+					difference = clock()-start;
+					str1 += sprintf(str1,"Time: %3d.%03d, Process %d, %s\n",difference/CLOCKS_PER_SEC,(difference*1000)/CLOCKS_PER_SEC%1000,
+						loopThroughProcesses-1,stringToPrint);
+					command = process[loopThroughCommands++];
+				}
+			}
+			PCBstate = 3; //exit state
+		}
+		else{
+			loopThroughProcesses++;
+		}
+	}
+	
 	difference = clock()-start;
-	str += sprintf(str,"Time: %3d.%03d, System stop\n", difference/CLOCKS_PER_SEC,(difference*1000)/CLOCKS_PER_SEC%1000);
-	simLog[logIndex++] = holdString;
+	str1 += sprintf(str1,"Time: %3d.%03d, System stop\n\n\n", difference/CLOCKS_PER_SEC,(difference*1000)/CLOCKS_PER_SEC%1000);
+	simLog[logIndex++] = holdRunString;
 	simLog[logIndex++] = "End Simulation\n==========================\n\n\n";
-	//printf("%s",get_log_to(storedConfigData));
 	int loopThroughLog;
 	char charToPrint;
 	if(strcmp(get_log_to(storedConfigData),"Both") == 0 || strcmp(get_log_to(storedConfigData), "Monitor")==0)
@@ -478,57 +553,28 @@ void sim02(char** storedConfigData, char** inMetadata)
 			printf("%s",simLog[loopThroughLog++]);
 		}
 	}
-	/*if(strcmp(get_log_to(storedConfigData),"Both")==0 || strcmp(get_log_to(storedConfigData),"File")==0)
+	if(strcmp(get_log_to(storedConfigData),"Both")==0 || strcmp(get_log_to(storedConfigData),"File")==0)
 	{
 		loopThroughLog = 0;
 		char* logToFilePath = get_log_file_path(storedConfigData);
 		FILE *inFilePtr = fopen(logToFilePath, "w");
-		charToPrint = simLog[loopThroughLog];
-		while(charToPrint != '\0')
+		while(loopThroughLog < logIndex)
 		{
-			//fputs(charToPrint,inFilePtr);
-			charToPrint = simLog[loopThroughLog++];
+			fputs(simLog[loopThroughLog++],inFilePtr);
 		}
 		fclose(inFilePtr);
-	}*/
+	}
 
 }
-
-/*ProcessControlBlock** create_pcbs(char** inMetadata)
-{
-	int* processesIndices = divide_processes_by_index(inMetadata);
-	int loopThroughProcesses = 0;
-	int numberOfProcesses = get_num_processes(inMetadata);
-	ProcessControlBlock** pcbStore = malloc((numberOfProcesses+1)*sizeof(ProcessControlBlock*));
-	char*** processesStore = (char***) malloc((numberOfProcesses+1)*sizeof(char**));
-	while(loopThroughProcesses < numberOfProcesses)
-	{
-		ProcessControlBlock* pcb;
-		if(loopThroughProcesses==0)
-		{
-			processesStore[loopThroughProcesses] = get_process_from_metadata(inMetadata,1,processesIndices[0]);
-			change_to_new_state(pcb);
-			pcbStore[loopThroughProcesses++] = pcb;
-		}
-		else
-		{
-			processesStore[loopThroughProcesses] = get_process_from_metadata(inMetadata,
-				processesIndices[loopThroughProcesses-1]+1,processesIndices[loopThroughProcesses]);
-			change_to_new_state(pcb);
-			pcbStore[loopThroughProcesses++] = pcb;
-		}
-	}
-	return pcbStore;
-}*/
 
 char** get_process_from_metadata(char** inMetadata, int startingIndex, int endingIndex)
 {
     int metadataIndex = startingIndex;
     int processArrayIndex = 0;
-    char** processArray = (char**) malloc(((endingIndex-startingIndex + 2))*sizeof(char*));
+    char** processArray = (char**) malloc((endingIndex-startingIndex + 2)*sizeof(char*));
   	while(metadataIndex  < endingIndex)
   	{
-  			//printf("%s ",inMetadata[metadataIndex++]);
+  			//printf("%s ",inMetadata[metadataIndex]);
   			processArray[processArrayIndex++] = inMetadata[metadataIndex++];
     }
     processArray[processArrayIndex] = '\0';
@@ -569,18 +615,45 @@ int get_num_processes(char** inMetadata)
 	return processes;
 }
 
-void set_pcbs_ready(ProcessControlBlock** inPCBs, int numberOfProcesses)
+void set_pcbs_ready(int* inPCBs, int numberOfProcesses)
 {
 	int loopThroughPCBs = 0;
 	while(loopThroughPCBs < numberOfProcesses)
 	{
-		change_to_ready_state(inPCBs[loopThroughPCBs++]);
+		inPCBs[loopThroughPCBs++] = 1;
 	}
 }
 
-void run_processes(ProcessControlBlock** inPCBs, char** logProcess, int logProcessIndex)
-{
 
+int get_config_cycle(char inLetter, char** storedConfigData)
+{
+	if(inLetter =='I' || inLetter == 'O')
+	{
+		return atoi(get_io_cycle_time(storedConfigData));
+	}
+	else if(inLetter == 'P'){
+		return atoi(get_processor_cycle_time(storedConfigData));
+	}
+	else{
+		return 0;
+	}
+}
+
+void run_command(char* command, int timeToRun)
+{
+	//get time to run
+	int msec = 0, i = 0, iterations = 0; /* 10ms */
+    clock_t before = clock();
+    do 
+    {
+    	for(i=0; i< 1000000; i++)
+    	{
+
+    	}
+        clock_t difference = clock() - before;
+        msec = difference * 1000 / CLOCKS_PER_SEC;
+        iterations++;
+   } while ( msec < timeToRun );
 }
 
 char* get_version(char** storedConfigData)
@@ -627,29 +700,3 @@ char* get_log_file_path(char** storedConfigData)
 {
 	return storedConfigData[8];
 }
-
-// PCB object methods
-void change_to_new_state(ProcessControlBlock *pcb)
-{
-	pcb->state = 0;
-}
-void change_to_ready_state(ProcessControlBlock *pcb)
-{
-	pcb->state = 1;
-}
-void change_to_run_state(ProcessControlBlock *pcb)
-{
-	pcb->state = 2;
-}
-void change_to_exit_state(ProcessControlBlock *pcb)
-{
-	pcb->state = 3;
-}
-int get_state(ProcessControlBlock *pcb)
-{
-	return (int) pcb->state;
-}
-/*char** get_process(ProcessControlBlock *pcb)
-{
-	return (char**) pcb->process;
-}*/

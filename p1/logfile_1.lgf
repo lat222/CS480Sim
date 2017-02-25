@@ -8,6 +8,129 @@ Loaded meta-data file
 
 
 Begin Simulation
+Time:   0.000, System start
+Time:   0.000, OS: Begin PCB Creation
+Time:   0.000, OS: All processes initialized in New state
+Time:   0.000, OS: All processes now set in Ready state
+Time:   0.000, OS: Process 0 set in Running State
+Time:   0.000, OS: Process 0 set in Running State
+Time:   0.000, Process 0, M(allocate)
+Time:   0.000, Process 0, I(hard drive) start
+Time:   0.672, Process 0, I(hard drive) end
+Time:   0.672, Process 0, O(hard drive) start
+Time:   1.219, Process 0, O(hard drive) end
+Time:   1.219, Process 0, I(keyboard) start
+Time:   2.828, Process 0, I(keyboard) end
+Time:   2.828, Process 0, I(hard drive) start
+Time:   3.188, Process 0, I(hard drive) end
+Time:   3.188, Process 0, O(hard drive) start
+Time:   3.969, Process 0, O(hard drive) end
+Time:   3.969, Process 0, O(hard drive) start
+Time:   4.641, Process 0, O(hard drive) end
+Time:   4.641, Process 0, O(printer) start
+Time:   5.453, Process 0, O(printer) end
+Time:   5.453, Process 0, I(keyboard) start
+Time:   7.656, Process 0, I(keyboard) end
+Time:   7.656, Process 0, I(keyboard) start
+Time:   9.656, Process 0, I(keyboard) end
+Time:   9.656, Process 0, I(keyboard) start
+Time:  10.656, Process 0, I(keyboard) end
+Time:  10.656, OS: Process 0 set in Exit State
+Time:  10.656, Process 1, O(hard drive) start
+Time:  11.203, Process 1, O(hard drive) end
+Time:  11.203, Process 1, O(hard drive) start
+Time:  11.750, Process 1, O(hard drive) end
+Time:  11.750, Process 1, O(printer) start
+Time:  12.750, Process 1, O(printer) end
+Time:  12.750, Process 1, P(run) start
+Time:  12.891, Process 1, P(run) end
+Time:  12.891, Process 1, P(run) start
+Time:  12.985, Process 1, P(run) end
+Time:  12.985, Process 1, I(hard drive) start
+Time:  13.297, Process 1, I(hard drive) end
+Time:  13.297, Process 1, P(run) start
+Time:  13.438, Process 1, P(run) end
+Time:  13.438, Process 1, O(printer) start
+Time:  14.438, Process 1, O(printer) end
+Time:  14.438, Process 1, O(hard drive) start
+Time:  14.860, Process 1, O(hard drive) end
+Time:  14.860, Process 1, I(hard drive) start
+Time:  15.281, Process 1, I(hard drive) end
+Time:  15.281, Process 1, P(run) start
+Time:  15.344, Process 1, P(run) end
+Time:  15.344, OS: Process 1 set in Exit State
+Time:  15.344, Process 2, I(hard drive) start
+Time:  15.766, Process 2, I(hard drive) end
+Time:  15.766, Process 2, I(hard drive) start
+Time:  16.188, Process 2, I(hard drive) end
+Time:  16.188, Process 2, I(hard drive) start
+Time:  17.094, Process 2, I(hard drive) end
+Time:  17.094, Process 2, O(monitor) start
+Time:  17.375, Process 2, O(monitor) end
+Time:  17.375, Process 2, P(run) start
+Time:  17.438, Process 2, P(run) end
+Time:  17.438, Process 2, P(run) start
+Time:  17.531, Process 2, P(run) end
+Time:  17.531, Process 2, I(hard drive) start
+Time:  18.313, Process 2, I(hard drive) end
+Time:  18.313, Process 2, I(hard drive) start
+Time:  18.688, Process 2, I(hard drive) end
+Time:  18.688, Process 2, O(printer) start
+Time:  20.000, Process 2, O(printer) end
+Time:  20.000, Process 2, I(keyboard) start
+Time:  21.000, Process 2, I(keyboard) end
+Time:  21.000, Process 2, P(run) start
+Time:  21.125, Process 2, P(run) end
+Time:  21.125, OS: Process 2 set in Exit State
+Time:  21.125, Process 3, M(access)
+Time:  21.125, Process 3, M(access)
+Time:  21.125, Process 3, O(printer) start
+Time:  21.937, Process 3, O(printer) end
+Time:  21.937, Process 3, O(printer) start
+Time:  23.047, Process 3, O(printer) end
+Time:  23.047, Process 3, I(hard drive) start
+Time:  23.469, Process 3, I(hard drive) end
+Time:  23.469, Process 3, O(hard drive) start
+Time:  24.375, Process 3, O(hard drive) end
+Time:  24.375, Process 3, O(printer) start
+Time:  25.484, Process 3, O(printer) end
+Time:  25.484, Process 3, P(run) start
+Time:  25.609, Process 3, P(run) end
+Time:  25.609, Process 3, P(run) start
+Time:  25.703, Process 3, P(run) end
+Time:  25.703, Process 3, I(keyboard) start
+Time:  27.703, Process 3, I(keyboard) end
+Time:  27.703, Process 3, I(keyboard) start
+Time:  29.703, Process 3, I(keyboard) end
+Time:  29.703, Process 3, I(hard drive) start
+Time:  30.609, Process 3, I(hard drive) end
+Time:  30.609, OS: Process 3 set in Exit State
+Time:  30.609, Process 4, P(run) start
+Time:  30.749, Process 4, P(run) end
+Time:  30.749, Process 4, P(run) start
+Time:  30.906, Process 4, P(run) end
+Time:  30.906, Process 4, P(run) start
+Time:  30.999, Process 4, P(run) end
+Time:  30.999, Process 4, O(printer) start
+Time:  31.702, Process 4, O(printer) end
+Time:  31.702, Process 4, I(hard drive) start
+Time:  32.484, Process 4, I(hard drive) end
+Time:  32.484, Process 4, O(hard drive) start
+Time:  32.968, Process 4, O(hard drive) end
+Time:  32.968, Process 4, I(keyboard) start
+Time:  33.968, Process 4, I(keyboard) end
+Time:  33.968, Process 4, P(run) start
+Time:  34.109, Process 4, P(run) end
+Time:  34.109, Process 4, O(hard drive) start
+Time:  34.421, Process 4, O(hard drive) end
+Time:  34.421, Process 4, P(run) start
+Time:  34.515, Process 4, P(run) end
+Time:  34.515, Process 4, I(hard drive) start
+Time:  35.249, Process 4, I(hard drive) end
+Time:  35.249, OS: Process 4 set in Exit State
+Time:  35.249, System stop
+
+
 End Simulation
 ==========================
 
