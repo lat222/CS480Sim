@@ -1,8 +1,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define cpuSchedulingCodeDefault "FCFS-N"
+#define logStringLength 1000
+
+typedef struct {
+	int state;
+	char** process;
+} ProcessControlBlock;
 
 char** store_config(char* fileName);
 int move_pointer_to_config_data(char* inString, char charToMovePointerPast);
@@ -25,6 +32,11 @@ int check_process_start_and_end(char* data);
 
 
 void sim02(char** storedConfigData, char** storedMetadata);
+
+ProcessControlBlock* create_pcbs(char** inMetadata, int programStartTime);
+void set_pcbs_ready(ProcessControlBlock* inPCBs, int programStartTime);
+void run_processes(ProcessControlBlock* inPCBs, int programStartTime, char** logProcess, int logProcessIndex);
+
 char* get_version(char** storedConfigData);
 char* get_file_path(char** storedConfigData);
 char* get_cpu_scheduling_code(char** storedConfigData);
@@ -34,11 +46,6 @@ char* get_processor_cycle_time(char** storedConfigData);
 char* get_io_cycle_time(char** storedConfigData);
 char* get_log_to(char** storedConfigData);
 char* get_log_file_path(char** storedConfigData);
-
-typedef struct {
-	int state;
-	char** process;
-} ProcessControlBlock;
 
 void change_to_new_state(ProcessControlBlock *pcb, char**  inProcess);
 void change_to_ready_state(ProcessControlBlock *pcb);

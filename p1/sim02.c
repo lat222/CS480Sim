@@ -2,32 +2,30 @@
 
 int main(int argc, char* argv[]) 
 {
-	char** configData = store_config("config1.cnf");
+	char** configData = store_config("config1.cnf"); 	// store config data in an array of char* or strings
+	// check the array data
+	// if the first item in the array IS NOT the '\0' character
+	// everything in the config file was accepted
 	if(configData[0] != '\0')
 	{
-		int loopThroughArray = 0;
-		while(configData[loopThroughArray] != '\0')
-		{
-			printf("%s\n", configData[loopThroughArray++]);
-		}
-		char** metadata = store_metadata(configData[1]);	// parse the metadata file
+		char** metadata = store_metadata(configData[1]);	// store metadata file in an array of char* or strings
+		// if the first item in the array IS NOT the '\0' character
+		// everything in the metadata file is acceptable
 		if(metadata[0] != '\0')
 		{
-			loopThroughArray = 0;
-			while(metadata[loopThroughArray] != '\0')
-			{
-				printf("%s\n", metadata[loopThroughArray++]);
-			}
 			sim02(configData,metadata);
+
 		}
+		// prints what was unaccepted in the metadata file
 		else
 		{
-			printf("%s \n", metadata[1]);
+			printf("%s.\n", metadata[1]);
 		}
 	}
+	// prints what was unaccepted in the confiugration file
 	else
 	{
-		printf("Error in Configuration File: %s.", configData[1]);
+		printf("ERROR: %s.\n", configData[1]);
 	}
 	return 0;
 }
@@ -132,8 +130,8 @@ char** store_config(char* fileName){
 char** store_metadata(char* fileName){
 	int processesStored = 0;
 	char *fileString = get_string_of_file(fileName);
-	int processes = count_char_in_string(fileString,';');
-	char **array = put_metadata_in_array(fileString,processes);
+	int commands = count_char_in_string(fileString,';');
+	char **array = put_metadata_in_array(fileString,commands);
 	return array;
 }
 
@@ -141,7 +139,7 @@ char* get_string_of_file(char* fileName)
 {
 	int fileSize;
 	char *file;
-	FILE *inFilePtr = fopen(fileName, "rb");
+	FILE *inFilePtr = fopen(fileName, "r");
 	fseek(inFilePtr, 0, SEEK_END);
 	fileSize = ftell(inFilePtr);
 	rewind(inFilePtr);
@@ -266,9 +264,9 @@ int check_log_file_path(char* fp)
 	return 1;
 }
 
-char** put_metadata_in_array(char* inString, int totalProcesses)
+char** put_metadata_in_array(char* inString, int totalCommands)
 {
-	char** arrayToReturn = (char**) malloc((totalProcesses+1)*sizeof(char*));
+	char** arrayToReturn = (char**) malloc((totalCommands+1)*sizeof(char*));
 	char* token;
 	token = strtok(inString, "\n");
 	token = strtok(NULL,"\n");
@@ -276,7 +274,7 @@ char** put_metadata_in_array(char* inString, int totalProcesses)
 	int noUnacceptableData  = 1;
 	int programStartsAndEnds = 0;
 	int processStartsAndEnds = 0;
-	while (processesStored<totalProcesses && noUnacceptableData != 0 && programStartsAndEnds < 2 && programStartsAndEnds > -1
+	while (processesStored<totalCommands && noUnacceptableData != 0 && programStartsAndEnds < 2 && programStartsAndEnds > -1
 	  && processStartsAndEnds < 2 && processStartsAndEnds >-1)
 	{
 		token = strtok(NULL,";");
@@ -413,7 +411,83 @@ int check_program_start_and_end(char* data)
 
 void sim02(char** storedConfigData, char** storedMetadata)
 {
-	printf("in sim02");
+	ProcessControlBlock* pcbstore;
+	clock_t difference;
+	char holdString[1000];
+	char *str = holdString;
+	char** simLog = (char**) malloc(logStringLength*sizeof(char*));
+	int logIndex = 0;
+	simLog[logIndex++]="Operating System Simulator\n==========================\n\n\n";
+	simLog[logIndex++]="Loaded configuration file\nLoaded meta-data file\n==========================\n\n\n"; 
+	simLog[logIndex++]="Begin Simulation\n";
+	clock_t start = clock();
+	str += sprintf(str, "Time: %3d.%03d, System start\n", start/CLOCKS_PER_SEC, start*1000%1000/CLOCKS_PER_SEC);
+	difference = clock()-start;
+	str += sprintf(str, "Time: %3d.%03d, OS: Begin PCB Creation\n", difference/CLOCKS_PER_SEC,((difference*1000)/CLOCKS_PER_SEC%1000));
+	ProcessControlBlock *pcbStore = create_pcbs(storedMetadata, start); // sets all PCBs in New state
+	difference = clock()-start;
+	str += sprintf(str, "Time: %3d.%03d, OS: All processes initialized in New state\n", difference/CLOCKS_PER_SEC,((difference*1000)/CLOCKS_PER_SEC%1000));
+	set_pcbs_ready(pcbStore, start); //sets all PCBs to ready;
+	difference = clock()-start;
+	str += sprintf(str, "Time: %3d.%03d, OS: All processes now set in Ready state\n", difference/CLOCKS_PER_SEC,(difference*1000)/CLOCKS_PER_SEC%1000);
+	run_processes(pcbStore, start, simLog, logIndex); // runs all processes and sets PCBs to run
+	difference = clock()-start;
+	str += sprintf(str,"Time: %3d.%03d, System stop\n", difference/CLOCKS_PER_SEC,(difference*1000)/CLOCKS_PER_SEC%1000);
+	simLog[logIndex++] = holdString;
+	simLog[logIndex++] = "End Simulation\n==========================\n\n\n";
+	//printf("%s",get_log_to(storedConfigData));
+	int loopThroughLog;
+	char charToPrint;
+	if(strcmp(get_log_to(storedConfigData),"Both") == 0 || strcmp(get_log_to(storedConfigData), "Monitor")==0)
+	{
+		loopThroughLog = 0;
+		while(loopThroughLog < logIndex)
+		{
+			printf("%s",simLog[loopThroughLog++]);
+		}
+	}
+	/*if(strcmp(get_log_to(storedConfigData),"Both")==0 || strcmp(get_log_to(storedConfigData),"File")==0)
+	{
+		loopThroughLog = 0;
+		char* logToFilePath = get_log_file_path(storedConfigData);
+		FILE *inFilePtr = fopen(logToFilePath, "w");
+		charToPrint = simLog[loopThroughLog];
+		while(charToPrint != '\0')
+		{
+			//fputs(charToPrint,inFilePtr);
+			charToPrint = simLog[loopThroughLog++];
+		}
+		fclose(inFilePtr);
+	}*/
+
+}
+
+ProcessControlBlock* create_pcbs(char** inMetadata, int programStartTime)
+{
+	int msec = 0, trigger = 1822, i = 0, iterations = 0; /* 10ms */
+	clock_t begin = clock();
+	do
+	{
+	    for(i=0; i< 10000000; i++)
+	    {
+	    }
+	    clock_t difference = clock() - begin;
+	    msec = difference * 1000 / CLOCKS_PER_SEC;
+	    iterations++;
+	} while ( msec < trigger );
+	printf("Time taken %d seconds %d milliseconds (%d iterations)\n",
+    msec/1000, msec%1000, iterations);
+
+}
+
+void set_pcbs_ready(ProcessControlBlock* inPCBs, int programStartTime)
+{
+
+}
+
+void run_processes(ProcessControlBlock* inPCBs, int programStartTime, char** logProcess, int logProcessIndex)
+{
+
 }
 
 char* get_version(char** storedConfigData)

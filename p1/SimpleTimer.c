@@ -141,7 +141,7 @@ void timeToString( int secTime, int uSecTime, char *timeStr )
 
     while( secTime > 0 )
        {
-        timeStr[ index ] = (char) secTime % 10 + '0';
+        timeStr[ index ] = (char) (secTime % 10 + '0');
 
         secTime /= 10;
 
