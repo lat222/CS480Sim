@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 		// if the first item in the array IS NOT the '\0' character
 		// everything in the metadata file is acceptable
 		if(metadata[0] != '\0')
-		{
+		{	
 			sim02(configData,metadata);
 
 		}
@@ -277,7 +277,7 @@ char** put_metadata_in_array(char* inString, int totalCommands)
 	while (processesStored<totalCommands && noUnacceptableData != 0 && programStartsAndEnds < 2 && programStartsAndEnds > -1
 	  && processStartsAndEnds < 2 && processStartsAndEnds >-1)
 	{
-		token = strtok(NULL,";");
+		token = strtok(NULL,";");	//Weird problem, strtok seems to save the next string and places it in the array, but changes it back later. Indices 1 and 0 though are identical.
 		if(count_char_in_string(token, '\n')>0)
 		{
 			char* noNewLine = token+2;
@@ -296,9 +296,9 @@ char** put_metadata_in_array(char* inString, int totalCommands)
 		}
 		else
 		{
-			noUnacceptableData += check_metadata_is_acceptable(token);
+			//noUnacceptableData += check_metadata_is_acceptable(token);
 			programStartsAndEnds += check_program_start_and_end(token);
-			processStartsAndEnds += check_process_start_and_end(token);
+			//processStartsAndEnds += check_process_start_and_end(token);
 			arrayToReturn[processesStored++] = token;
 		}
 	}
@@ -409,9 +409,8 @@ int check_program_start_and_end(char* data)
 }
 
 
-void sim02(char** storedConfigData, char** storedMetadata)
+void sim02(char** storedConfigData, char** inMetadata)
 {
-	ProcessControlBlock* pcbstore;
 	clock_t difference;
 	char holdString[1000];
 	char *str = holdString;
@@ -424,13 +423,46 @@ void sim02(char** storedConfigData, char** storedMetadata)
 	str += sprintf(str, "Time: %3d.%03d, System start\n", start/CLOCKS_PER_SEC, start*1000%1000/CLOCKS_PER_SEC);
 	difference = clock()-start;
 	str += sprintf(str, "Time: %3d.%03d, OS: Begin PCB Creation\n", difference/CLOCKS_PER_SEC,((difference*1000)/CLOCKS_PER_SEC%1000));
-	ProcessControlBlock *pcbStore = create_pcbs(storedMetadata, start); // sets all PCBs in New state
+	
+	// Store all processes and their PCBs here
+	// Need access to both Processes list and PCB list
+
+	ProcessControlBlock* test;
+	change_to_new_state(test);
+	printf("PCB State: %d\n",get_state(test));
+
+	int* processesIndices = divide_processes_by_index(inMetadata);
+	int loopThroughProcesses = 0;
+	int numberOfProcesses = get_num_processes(inMetadata);
+	ProcessControlBlock** pcbStore = (ProcessControlBlock**) malloc((numberOfProcesses+1)*sizeof(ProcessControlBlock*));
+	char*** processesStore = (char***) malloc((numberOfProcesses+1)*sizeof(char**));
+	while(loopThroughProcesses < numberOfProcesses)
+	{
+		ProcessControlBlock* pcb;
+		if(loopThroughProcesses==0)
+		{
+			processesStore[loopThroughProcesses] = get_process_from_metadata(inMetadata,1,processesIndices[0]);
+			//change_to_new_state(pcb);
+			//pcbStore[loopThroughProcesses++] = pcb;
+		}
+		else
+		{
+			processesStore[loopThroughProcesses] = get_process_from_metadata(inMetadata,
+				processesIndices[loopThroughProcesses-1]+1,processesIndices[loopThroughProcesses]);
+			//change_to_new_state(pcb);
+			//pcbStore[loopThroughProcesses++] = pcb;
+		}
+		loopThroughProcesses++;
+	}
+
 	difference = clock()-start;
 	str += sprintf(str, "Time: %3d.%03d, OS: All processes initialized in New state\n", difference/CLOCKS_PER_SEC,((difference*1000)/CLOCKS_PER_SEC%1000));
-	set_pcbs_ready(pcbStore, start); //sets all PCBs to ready;
+	
+	//set_pcbs_ready(pcbStore,numberOfProcesses); //sets all PCBs to ready;
+	
 	difference = clock()-start;
 	str += sprintf(str, "Time: %3d.%03d, OS: All processes now set in Ready state\n", difference/CLOCKS_PER_SEC,(difference*1000)/CLOCKS_PER_SEC%1000);
-	run_processes(pcbStore, start, simLog, logIndex); // runs all processes and sets PCBs to run
+	//run_processes(pcbStore, simLog, logIndex); // runs all processes and sets PCBs to run
 	difference = clock()-start;
 	str += sprintf(str,"Time: %3d.%03d, System stop\n", difference/CLOCKS_PER_SEC,(difference*1000)/CLOCKS_PER_SEC%1000);
 	simLog[logIndex++] = holdString;
@@ -462,30 +494,91 @@ void sim02(char** storedConfigData, char** storedMetadata)
 
 }
 
-ProcessControlBlock* create_pcbs(char** inMetadata, int programStartTime)
+/*ProcessControlBlock** create_pcbs(char** inMetadata)
 {
-	int msec = 0, trigger = 1822, i = 0, iterations = 0; /* 10ms */
-	clock_t begin = clock();
-	do
+	int* processesIndices = divide_processes_by_index(inMetadata);
+	int loopThroughProcesses = 0;
+	int numberOfProcesses = get_num_processes(inMetadata);
+	ProcessControlBlock** pcbStore = malloc((numberOfProcesses+1)*sizeof(ProcessControlBlock*));
+	char*** processesStore = (char***) malloc((numberOfProcesses+1)*sizeof(char**));
+	while(loopThroughProcesses < numberOfProcesses)
 	{
-	    for(i=0; i< 10000000; i++)
-	    {
-	    }
-	    clock_t difference = clock() - begin;
-	    msec = difference * 1000 / CLOCKS_PER_SEC;
-	    iterations++;
-	} while ( msec < trigger );
-	printf("Time taken %d seconds %d milliseconds (%d iterations)\n",
-    msec/1000, msec%1000, iterations);
+		ProcessControlBlock* pcb;
+		if(loopThroughProcesses==0)
+		{
+			processesStore[loopThroughProcesses] = get_process_from_metadata(inMetadata,1,processesIndices[0]);
+			change_to_new_state(pcb);
+			pcbStore[loopThroughProcesses++] = pcb;
+		}
+		else
+		{
+			processesStore[loopThroughProcesses] = get_process_from_metadata(inMetadata,
+				processesIndices[loopThroughProcesses-1]+1,processesIndices[loopThroughProcesses]);
+			change_to_new_state(pcb);
+			pcbStore[loopThroughProcesses++] = pcb;
+		}
+	}
+	return pcbStore;
+}*/
 
-}
-
-void set_pcbs_ready(ProcessControlBlock* inPCBs, int programStartTime)
+char** get_process_from_metadata(char** inMetadata, int startingIndex, int endingIndex)
 {
-
+    int metadataIndex = startingIndex;
+    int processArrayIndex = 0;
+    char** processArray = (char**) malloc(((endingIndex-startingIndex + 2))*sizeof(char*));
+  	while(metadataIndex  < endingIndex)
+  	{
+  			//printf("%s ",inMetadata[metadataIndex++]);
+  			processArray[processArrayIndex++] = inMetadata[metadataIndex++];
+    }
+    processArray[processArrayIndex] = '\0';
+    return processArray;
 }
 
-void run_processes(ProcessControlBlock* inPCBs, int programStartTime, char** logProcess, int logProcessIndex)
+int* divide_processes_by_index(char** inMetadata){
+	int numberOfProcesses = get_num_processes(inMetadata);
+	int* processesArray = malloc((numberOfProcesses+1)*sizeof(int));
+	int loopThroughMetadata = 0;
+	int loopThroughProcesses = 0;
+	char* command = inMetadata[loopThroughMetadata];
+	while(loopThroughProcesses < numberOfProcesses)
+	{
+		if(strcmp(command, "A(end)0") == 0)
+		{
+			processesArray[loopThroughProcesses++] = loopThroughMetadata;
+		}
+		command = inMetadata[loopThroughMetadata++];
+	}
+	return processesArray;
+	
+}
+
+int get_num_processes(char** inMetadata)
+{
+	int loopThroughMetadata = 0;
+	int processes = 0;
+	char* command = inMetadata[loopThroughMetadata];
+	while(strcmp(command, "S(end)0") != 0)
+	{
+		if(strcmp(command, "A(end)0") == 0)
+		{
+			processes += 1;
+		}
+		command = inMetadata[loopThroughMetadata++];
+	}
+	return processes;
+}
+
+void set_pcbs_ready(ProcessControlBlock** inPCBs, int numberOfProcesses)
+{
+	int loopThroughPCBs = 0;
+	while(loopThroughPCBs < numberOfProcesses)
+	{
+		change_to_ready_state(inPCBs[loopThroughPCBs++]);
+	}
+}
+
+void run_processes(ProcessControlBlock** inPCBs, char** logProcess, int logProcessIndex)
 {
 
 }
@@ -536,10 +629,9 @@ char* get_log_file_path(char** storedConfigData)
 }
 
 // PCB object methods
-void change_to_new_state(ProcessControlBlock *pcb, char** inProcess)
+void change_to_new_state(ProcessControlBlock *pcb)
 {
 	pcb->state = 0;
-	pcb->process = inProcess;
 }
 void change_to_ready_state(ProcessControlBlock *pcb)
 {
@@ -557,7 +649,7 @@ int get_state(ProcessControlBlock *pcb)
 {
 	return (int) pcb->state;
 }
-char** get_process(ProcessControlBlock *pcb)
+/*char** get_process(ProcessControlBlock *pcb)
 {
 	return (char**) pcb->process;
-}
+}*/

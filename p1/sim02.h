@@ -8,7 +8,6 @@
 
 typedef struct {
 	int state;
-	char** process;
 } ProcessControlBlock;
 
 char** store_config(char* fileName);
@@ -31,11 +30,14 @@ int check_program_start_and_end(char* data);
 int check_process_start_and_end(char* data);
 
 
-void sim02(char** storedConfigData, char** storedMetadata);
+void sim02(char** storedConfigData, char** inMetadata);
 
-ProcessControlBlock* create_pcbs(char** inMetadata, int programStartTime);
-void set_pcbs_ready(ProcessControlBlock* inPCBs, int programStartTime);
-void run_processes(ProcessControlBlock* inPCBs, int programStartTime, char** logProcess, int logProcessIndex);
+//ProcessControlBlock** create_pcbs(char** inMetadata);
+void set_pcbs_ready(ProcessControlBlock** inPCBs, int numberOfProcesses);
+void run_processes(ProcessControlBlock** inPCBs, char** logProcess, int logProcessIndex);
+int get_num_processes(char** inMetadata);
+int* divide_processes_by_index(char** inMetadata);
+char** get_process_from_metadata(char** inMetadata, int startingIndex, int endingIndex);
 
 char* get_version(char** storedConfigData);
 char* get_file_path(char** storedConfigData);
@@ -47,9 +49,9 @@ char* get_io_cycle_time(char** storedConfigData);
 char* get_log_to(char** storedConfigData);
 char* get_log_file_path(char** storedConfigData);
 
-void change_to_new_state(ProcessControlBlock *pcb, char**  inProcess);
+void change_to_new_state(ProcessControlBlock *pcb);
 void change_to_ready_state(ProcessControlBlock *pcb);
 void change_to_run_state(ProcessControlBlock *pcb);
 void change_to_exit_state(ProcessControlBlock *pcb);
 int get_state(ProcessControlBlock *pcb);
-char** get_process(ProcessControlBlock *pcb);
+//char** get_process(ProcessControlBlock *pcb);
